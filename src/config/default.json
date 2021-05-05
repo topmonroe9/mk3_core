@@ -1,0 +1,36 @@
+{
+    "name": "development_monroe",
+    "server": {
+        "internalIP": "localhost",
+        "publicIP": "localhost",
+        "domain": "localhost",
+        "serverPort": "3000",
+        "corsOriginArray": [
+            "http://localhost",
+            "http://crm.mk3.ru"
+        ],
+        "corsHost": "http://localhost:3000"
+
+    },
+    "security": {
+        "jwtPrivateKey": "",
+        "ssl": false
+    },
+    "db": {
+        "mongoDBUri": "mongodb://localhost/mk3crm",
+        "mongooseLogLvl": "debug"
+    },
+    "mail": {
+        "emailFrom": "noreply@mk3.ru",
+        "email": {
+            "host": "smtp.yandex.ru",
+            "port": 465,
+            "secure": true,
+            "auth": {
+                "user": "noreply@mk3.ru",
+                "pass": ""
+            }
+        }
+
+    }
+}

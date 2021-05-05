@@ -1,0 +1,16 @@
+{
+    "security": {
+        "jwtPrivateKey": "crm_jwtPrivateKey"
+    },
+    "db": {
+        "mongoDBUri": "mongodbURI"
+    },
+    "mail": {
+        "email": {
+            "auth": {
+                "pass": "NODEMAIL_PWD"
+            }
+        }
+    }
+
+}
