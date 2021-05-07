@@ -1,4 +1,5 @@
 import * as Joi from "joi";
+import {Role} from "@interfaces/role.enum";
 
 const options = {abortEarly: false, stripUnknown: true}
 
@@ -43,10 +44,9 @@ export const create = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(6).required(),
     confirmPassword: Joi.string().valid(Joi.ref('password')).required(),
-    // role: Joi.string().valid(RoleEnum.Admin, RoleEnum.Manager, RoleEnum.User).required()
 });
 
-export const update = {
+export const update = Joi.object({
     firstName: Joi.string().empty(''),
     lastName: Joi.string().empty(''),
     email: Joi.string().email().empty(''),
@@ -54,5 +54,5 @@ export const update = {
     confirmPassword: Joi.string().valid(Joi.ref('password')).empty(''),
     allowedBimCat: Joi.string(),
     suspended: Joi.bool(),
-    // role = Joi.string().valid(RoleEnum.Admin, RoleEnum.Manager, RoleEnum.Employee, RoleEnum.Outsource, RoleEnum.Suspended).empty('')
-};
+    roles: Joi.array().items(Joi.string().valid(...Object.values(Role)))
+});

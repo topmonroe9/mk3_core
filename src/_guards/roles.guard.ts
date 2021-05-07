@@ -6,6 +6,7 @@ import {UserService} from "../users/user.service";
 import {RefreshTokensService} from "../refresh-tokens/refresh-tokens.service";
 import * as jwt from "jsonwebtoken";
 import * as _ from 'lodash'
+import {User} from "../schemas/user.schema";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,7 +18,6 @@ export class RolesGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
 
         const req = context.switchToHttp().getRequest();
-
         if (!req.headers.authorization && !req.cookies.refreshToken) {
             return false;
         }
@@ -37,13 +37,9 @@ export class RolesGuard implements CanActivate {
             return true;
         }
 
-        // return requiredRoles == req.user.role
-        // return requiredRoles.some( (roles) => {
-        //     req.user.roles.includes(roles)
-        // });
         //check if user has access to requested resource
         const check: [] = _.intersection(req.user.roles, requiredRoles)
-        return !( _.isEmpty(check) )
+        return requiredRoles.some( r => req.user.roles.includes(r) )
     }
 
 
@@ -61,7 +57,8 @@ export class RolesGuard implements CanActivate {
     }
 
     async validateUser(req) {
-        const account = await this.userService.getById(req.user.id);
+        const account = await this.userService.getAccount(req.user.id);
+
         const refreshTokens = await this.refreshTokenService.find({account: account.id});
 
         if (!account) throw new HttpException('Forbidden', HttpStatus.UNAUTHORIZED);
@@ -70,7 +67,6 @@ export class RolesGuard implements CanActivate {
 
         // authentication and authorization successful
         req.user.roles = account.roles;
-
         req.user.ownsToken = token => !!refreshTokens.find(x => x.token === token);
     }
 }

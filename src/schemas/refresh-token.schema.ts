@@ -1,14 +1,14 @@
 import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import { Document } from 'mongoose';
 import * as mongoose from "mongoose";
-import {User} from "@schemas/user.schema";
+import {User, UserDocument} from "@schemas/user.schema";
 
 export type RefreshTokenDocument = RefreshToken & Document;
 
 @Schema()
-export class RefreshToken extends Document {
+export class RefreshToken {
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-    account: User
+    account: UserDocument
     @Prop({ type: String })
     token: string
     @Prop({ type: Date })

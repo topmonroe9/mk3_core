@@ -1,6 +1,8 @@
 import {Prop, raw, Schema, SchemaFactory} from "@nestjs/mongoose";
 import { Document } from 'mongoose';
 import { Role } from "@interfaces/role.enum";
+import * as mongoose from "mongoose";
+import {BimCat, BimCatDocument} from "@schemas/bimCategory.schema";
 // import { ResetToken } from "@schemas/resetToken.shema";
 
 export type UserDocument = User & Document;
@@ -18,7 +20,7 @@ export class User {
     @Prop({ required: true, type: String })
     lastName: string
     @Prop([{ required: true, type: String, enum: Role }])
-    roles: [Role]
+    roles: Role[]
     @Prop({  type: String })
     verificationToken: String
     @Prop({ type: Date })
@@ -34,12 +36,12 @@ export class User {
     created: Date
     @Prop({type: Date})
     updated: Date
-    // @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'BimCategory'})
-    // allowedBimCat: BimCategory
+    @Prop({type: mongoose.Schema.Types.ObjectId, ref: BimCat.name})
+    allowedBimCat: BimCatDocument // todo change this
     @Prop({type: Boolean, default: false})
     suspended: boolean
     @Prop({type: Date})
-    suspendedAt: Date
+    suspendedAt: Date | undefined
 //     lastOnlinePortal: {type: Date},
 //     lastOnlineLauncher: {type: Date},
     @Prop({type: Number, default: 0})
