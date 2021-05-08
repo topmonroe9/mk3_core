@@ -76,8 +76,8 @@ export class UserController {
 
     @Post('register')
     @UsePipes(new JoiValidationPipe(Validation.register))
-    async register(@Body() body: RegisterUserDto, @Req() req) {
-        return this.userService.register(body, req.origin)
+    async register(@Body() body: RegisterUserDto) {
+        return this.userService.register(body)
             .then(() => {
                 return {message: 'Данные приняты. Проверьте электронную почту для подтверждения регистрации.'}
             })
@@ -131,15 +131,13 @@ export class UserController {
 
     @Get('id/:id')
     @UseGuards(RolesGuard)
-    @Roles(Role.Admin, Role.Manager)
     getById(@Req() req) {
         // users can get their own account and admins can get any account
-        // if ( req.params.id !== req.user.id &&
-        //     !req.user.roles.some( r => r== (Role.Admin || Role.Manager) ) ) {
-        //     throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED)
-        // }
-        console.log("\n USER ID")
-        console.log(req.params.id)
+        const AdminOrManager = req.user.roles.some( (r) => [Role.Admin, Role.Manager].includes(r) )
+        if ( req.params.id !== req.user.id && !AdminOrManager) {
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN)
+        }
+
         return this.userService.getAccount(req.params.id)
             .then( (account) => {
                 console.log(account)

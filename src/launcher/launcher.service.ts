@@ -64,9 +64,9 @@ export class LauncherService {
 
     public async downloadLatest(user: UserDto, ip: string): Promise<string> {
         const account = await this.userModel.findOne({_id: user.id})
-        const notAdminOrManager = !(user.roles.includes(Role.Admin) || user.roles.includes(Role.Manager))
+        const AdminOrManager = user.roles.some( (r) => [Role.Admin, Role.Manager].includes(r) )
 
-        if (account.launcherDownloaded >= 3 && notAdminOrManager ) {
+        if (account.launcherDownloaded >= 3 && !AdminOrManager ) {
             throw new HttpException("Превышен лимит на скачивание. Инцидент зафиксирован. Свяжитесь со своим руководителем.",
                 HttpStatus.METHOD_NOT_ALLOWED)
 

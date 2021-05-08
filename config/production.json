@@ -1,24 +1,17 @@
 {
-  "name": "copper",
+  "name": "production",
   "server": {
     "internalIP": "192.168.10.153",
     "publicIP": "195.91.134.124",
-    "domain": "crm.mk3.ru",
-    "serverPort": "80",
-    "corsOriginArray": [
-      "http://localhost",
-      "http://crm.mk3.ru",
-      "http://195.91.134.124"
-    ],
-    "corsHost": "http://crm.mk3.ru:80"
+    "port": "80",
+    "origin": "http://crm.mk3.ru"
   },
   "security": {
     "jwtPrivateKey": "",
     "ssl": false
   },
   "db": {
-    "mongoDBUri": "mongodb://localhost/mk3crm",
-    "mongooseLogLvl": "debug"
+    "mongoDBUri": ""
   },
   "mail": {
     "emailFrom": "noreply@mk3.ru",

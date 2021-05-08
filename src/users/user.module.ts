@@ -5,15 +5,17 @@ import {UserService} from './user.service';
 import {UserController} from "./user.controller";
 import {RefreshToken, RefreshTokenSchema} from "@schemas/refresh-token.schema";
 import {RefreshTokensService} from "../refresh-tokens/refresh-tokens.service";
-import {MailService} from "../_sevices/mailer";
+import {MailService} from "../mail/mail.service";
+import {MailModule} from "../mail/mail.module";
 
 
 @Module({
     imports: [
         MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
         MongooseModule.forFeature([{name: RefreshToken.name, schema: RefreshTokenSchema}]),
+        MailModule,
     ],
-    providers: [UserService, RefreshTokensService, MailService ],
+    providers: [UserService, RefreshTokensService ],
     controllers: [UserController],
     exports: [UserService]
 })

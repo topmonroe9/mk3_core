@@ -7,14 +7,12 @@ import * as bcrypt from 'bcrypt'
 import {randomBytes} from "crypto";
 import {RefreshToken, RefreshTokenDocument} from "@schemas/refresh-token.schema";
 import * as jwt from "jsonwebtoken";
-import {MailService} from "../_sevices/mailer";
+import {MailService} from "../mail/mail.service";
 import {Role} from "../_interfaces/role.enum";
 
 import {UserDto} from "./dto/UserDto";
 import {ForgotPwdDto, LoginUserDto, RegisterUserDto, ResetPwdDto, ValidateResetTokenDto, VerifyEmailDto} from "./dto";
 import {CrudUserDto} from "./dto/crudUserDto";
-
-const config = require('config');
 
 @Injectable()
 export class UserService {
@@ -32,7 +30,8 @@ export class UserService {
             throw new HttpException('Неправильные почта или пароль', HttpStatus.BAD_REQUEST);
         }
 
-        if (user.suspended) throw new HttpException("Ваш аккаунт заморожен. Свяжитесь со своим руководителем.", HttpStatus.BAD_REQUEST)
+        if (user.suspended)
+            throw new HttpException("Ваш аккаунт заморожен. Свяжитесь со своим руководителем.", HttpStatus.BAD_REQUEST)
 
         // authentication successful so generate jwt and refresh tokens
         const jwtToken = this.generateJwtToken(user);
@@ -49,7 +48,7 @@ export class UserService {
         };
     }
 
-    public async register(params: RegisterUserDto, origin: string): Promise<void> {
+    public async register(params: RegisterUserDto): Promise<void> {
         ;
         if (await this.userModel.findOne({email: params.email})) {
             // send already registered error in email to prevent account enumeration
@@ -74,7 +73,7 @@ export class UserService {
         // save account
         await account.save();
         // send email
-        // await this.sendVerificationEmail(account, origin);
+        await this.mailService.sendVerificationEmail(account);
         return
     }
 
@@ -151,28 +150,28 @@ export class UserService {
         await account.save();
 
         // send email
-        await this.sendPasswordResetEmail(account, origin);
+        // await this.sendPasswordResetEmail(account, origin);
     }
 
-    private async sendVerificationEmail(account: UserDto, origin: string) {
-        let message;
-        if (origin) {
-            const verifyUrl = `${origin}#/account/verify-email?token=${account.verificationToken}`;
-            message = `<p>Для завершения регистрации на портале MK3, пожалуйста, перейдите по следующей ссылке:</p>
-                   <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-        } else {
-            message = `<p>Используйте токен, указанный ниже для подтверждения регистрации. </br>API Адрес:<code>/users/verify-email</code></p>
-                   <p><code>${account.verificationToken}</code></p>`;
-        }
-
-        await this.mailService.sendEmail({
-            to: account.email,
-            subject: 'M.K.3 CRM - Подтверждение регистрации',
-            html: `<h4>Подтверждение регистрации</h4>
-
-               ${message}`
-        });
-    }
+    // private async sendVerificationEmail(account: UserDto, origin: string) {
+    //     let message;
+    //     if (origin) {
+    //         const verifyUrl = `${origin}#/account/verify-email?token=${account.verificationToken}`;
+    //         message = `<p>Для завершения регистрации на портале MK3, пожалуйста, перейдите по следующей ссылке:</p>
+    //                <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
+    //     } else {
+    //         message = `<p>Используйте токен, указанный ниже для подтверждения регистрации. </br>API Адрес:<code>/users/verify-email</code></p>
+    //                <p><code>${account.verificationToken}</code></p>`;
+    //     }
+    //
+    //     await this.mailService.sendEmail({
+    //         to: account.email,
+    //         subject: 'M.K.3 CRM - Подтверждение регистрации',
+    //         html: `<h4>Подтверждение регистрации</h4>
+    //
+    //            ${message}`
+    //     });
+    // }
 
 //
 // async function sendAlreadyRegisteredEmail(email, origin) {
@@ -281,29 +280,30 @@ export class UserService {
         return await this.findByEmail(userData.email);
     }
 
-    private async sendPasswordResetEmail(account: User, origin: string) {
-        let message;
-        if (origin) {
-            const resetUrl = `${origin}#/account/reset-password?token=${account.resetToken.token}`;
-            message = `<p>Перейдите по следующей ссылке для изменения пароля. Ссылка активна 24 часа.</p>
-                   <p><a href="${resetUrl}">${resetUrl}</a></p>
-                    <p><br><br>Если вы не совершали сброс пароля, пожалуйста, в целях безопасности, перешлите это сообщение системному администратору</p>`;
-        } else {
-            message = `<p>Используйте следующий токен для восстановления пароля. API адрес: <code>/users/reset-password</code> </p>
-                   <p><code>${account.resetToken.token}</code></p>`;
-        }
-
-        await this.mailService.sendEmail({
-            to: account.email,
-            subject: 'М.К.3 Портал - Восстановление пароля',
-            html: `<h4>М.К.3 - Восстановление пароля</h4>
-               ${message}`
-        });
-    }
+    // private async sendPasswordResetEmail(account: User, origin: string) {
+    //     let message;
+    //     if (origin) {
+    //         const resetUrl = `${origin}#/account/reset-password?token=${account.resetToken.token}`;
+    //         message = `<p>Перейдите по следующей ссылке для изменения пароля. Ссылка активна 24 часа.</p>
+    //                <p><a href="${resetUrl}">${resetUrl}</a></p>
+    //                 <p><br><br>Если вы не совершали сброс пароля, пожалуйста, в целях безопасности, перешлите это сообщение системному администратору</p>`;
+    //     } else {
+    //         message = `<p>Используйте следующий токен для восстановления пароля. API адрес: <code>/users/reset-password</code> </p>
+    //                <p><code>${account.resetToken.token}</code></p>`;
+    //     }
+    //
+    //     await this.mailService.sendEmail({
+    //         to: account.email,
+    //         subject: 'М.К.3 Портал - Восстановление пароля',
+    //         html: `<h4>М.К.3 - Восстановление пароля</h4>
+    //            ${message}`
+    //     });
+    // }
 
     private emailIsMk3(email) {
-        let regEx = "/^(([^<>()\\[\\]\\\\.,;:\\s@\"]+(\\.[^<>()\\[\\]\\\\.,;:\\s@\"]+)*)|(\".+\"))@(?:mk3.ru)$/)"
-        if (email.match(regEx)) return true
+        let regEx = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(mk3)\.ru$/
+        if (email.match(regEx))
+            return true
         return false
     }
 

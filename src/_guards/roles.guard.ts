@@ -5,8 +5,6 @@ import {Role} from "../_interfaces/role.enum";
 import {UserService} from "../users/user.service";
 import {RefreshTokensService} from "../refresh-tokens/refresh-tokens.service";
 import * as jwt from "jsonwebtoken";
-import * as _ from 'lodash'
-import {User} from "../schemas/user.schema";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -38,7 +36,6 @@ export class RolesGuard implements CanActivate {
         }
 
         //check if user has access to requested resource
-        const check: [] = _.intersection(req.user.roles, requiredRoles)
         return requiredRoles.some( r => req.user.roles.includes(r) )
     }
 

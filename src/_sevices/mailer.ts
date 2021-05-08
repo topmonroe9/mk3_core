@@ -5,7 +5,7 @@ import * as nodemailer from 'nodemailer'
 
 export class MailService {
 
-    async sendEmail({ to, subject, html, from: string = config.get('mail.emailFrom') }) {
+    async sendEmail({ to, subject, html, from: string = process.env.mailFrom }) {
 
         const transporter = nodemailer.createTransport(config.get('mail.email'))
         // @ts-ignore

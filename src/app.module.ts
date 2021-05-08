@@ -10,10 +10,17 @@ import {ThrottlerGuard, ThrottlerModule} from "@nestjs/throttler";
 import {APP_GUARD} from "@nestjs/core";
 import {ServeStaticModule} from "@nestjs/serve-static";
 import { join } from 'path';
+import { MailModule } from './mail/mail.module';
+import * as config from 'config'
 
 @Module({
     imports: [
-        MongooseModule.forRoot('mongodb://localhost/mk3crm'),
+        MongooseModule.forRoot(config.get('db.mongoDBUri'), {
+            useNewUrlParser: true,
+            useFindAndModify: false,
+            useUnifiedTopology: true,
+            useCreateIndex: true
+        }),
         UserModule,
         RefreshTokensModule,
         BimCatsModule,
@@ -23,8 +30,9 @@ import { join } from 'path';
             limit: 100,
         }),
         ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', 'public'),
+            rootPath: join(__dirname, '..', '..', 'mk3Public', 'website'),
         }),
+        MailModule,
     ],
     controllers: [AppController],
     providers: [

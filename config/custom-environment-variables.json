@@ -3,7 +3,7 @@
         "jwtPrivateKey": "crm_jwtPrivateKey"
     },
     "db": {
-        "mongoDBUri": "mongodbURI"
+        "mongoDBUri": "DB_URI"
     },
     "mail": {
         "email": {

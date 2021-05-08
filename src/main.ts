@@ -3,18 +3,28 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import * as helmet from 'helmet'
 import * as compression from 'compression';
-import * as csurf from 'csurf';
+import * as config from "config";
+
+
+//
+// env.forEach( x => {
+//   if ( x == undefined) {
+//     console.log(`\n\n\x1b[31m One or more Environment Variable is undefined. \n\n\x1b[0m`)
+//     process.exit(1)
+//   }
+// })
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use( cookieParser() );
 
-  /*
-   * Helmet configuration
-   */
+  const origin: string = config.get('server.origin')
+  const port: string = config.get('server.port')
+
   app.use(helmet.contentSecurityPolicy({
     directives: {
-      "default-src": ["http://crm.mk3.ru"],
+      "default-src": [`${origin}`],
       "base-uri": ["'self'"],
       "font-src": ["'self'", "https:", "data:"],
       "frame-ancestors": ['self'],
@@ -36,11 +46,8 @@ async function bootstrap() {
   app.use(helmet.referrerPolicy());
   app.use(helmet.xssFilter());
 
-  const origin = process.env.origin
-  const port = process.env.port
-
   app.enableCors({
-    origin: 'http://localhost:4200',
+    origin: origin,
     credentials: true
   })
 
@@ -49,7 +56,8 @@ async function bootstrap() {
   //   cookie: true
   // }))
 
-  await app.listen(3000);
+  await app.listen(port);
+  console.log(`\n\n\x1b[32m Server started listentning on port \x1b[33m${port}. \n\n\x1b[0m`)
 
 }
 bootstrap();
