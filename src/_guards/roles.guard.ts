@@ -5,6 +5,7 @@ import {Role} from "../_interfaces/role.enum";
 import {UserService} from "../users/user.service";
 import {RefreshTokensService} from "../refresh-tokens/refresh-tokens.service";
 import * as jwt from "jsonwebtoken";
+import * as config from "config";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -46,7 +47,7 @@ export class RolesGuard implements CanActivate {
         }
         try {
             const token = auth.split(' ')[1];
-            return await jwt.verify(token, process.env.crm_jwtPrivateKey)
+            return await jwt.verify(token, config.get('security.jwtPrivateKey'))
         } catch (error) {
             const message = 'Token Error: ' + (error.message || error.name);
             throw new HttpException(message, HttpStatus.FORBIDDEN);

@@ -9,6 +9,7 @@ import {RefreshToken, RefreshTokenDocument} from "@schemas/refresh-token.schema"
 import * as jwt from "jsonwebtoken";
 import {MailService} from "../mail/mail.service";
 import {Role} from "../_interfaces/role.enum";
+import * as config from 'config'
 
 import {UserDto} from "./dto/UserDto";
 import {ForgotPwdDto, LoginUserDto, RegisterUserDto, ResetPwdDto, ValidateResetTokenDto, VerifyEmailDto} from "./dto";
@@ -293,7 +294,7 @@ export class UserService {
 
     private generateJwtToken(account: User): string {
         // create a jwt token containing the account id that expires in 15 minutes
-        return jwt.sign({sub: account._id, id: account._id}, process.env.crm_jwtPrivateKey, {expiresIn: '15h'});
+        return jwt.sign({sub: account._id, id: account._id}, config.get('security.jwtPrivateKey'), {expiresIn: '15h'});
     }
 
     public basicDetails(account: UserDocument): UserDto {
