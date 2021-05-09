@@ -17,7 +17,7 @@ import { Role } from '@interfaces/role.enum';
 import { Roles } from '../_decorators/roles.decorator';
 import { JoiValidationPipe } from '../_pipes/joi-validation.pipe';
 import * as Validate from './dto/launcherValidation';
-import { join } from 'node:path';
+import { join } from 'path';
 
 @Controller('api/launchers')
 export class LauncherController {
@@ -54,7 +54,7 @@ export class LauncherController {
     @Roles(Role.Admin)
     async downloadById(@Param() param, @Res() res) {
         return this.launcherService.downloadById(param.id).then((file) => {
-            return res.download(this.generateLink(file));
+            return res.download(LauncherController.generateLink(file));
         });
     }
 
@@ -64,7 +64,7 @@ export class LauncherController {
         return this.launcherService
             .downloadLatest(req.user, req.ip)
             .then((file) => {
-                return res.download(this.generateLink(file));
+                return res.download(LauncherController.generateLink(file));
             });
     }
 
@@ -99,7 +99,7 @@ export class LauncherController {
         });
     }
 
-    private generateLink(fileName: string): string {
+    private static generateLink(fileName: string): string {
         return join(__dirname, '..', '..', 'mk3-public', 'launchers', fileName);
     }
 }

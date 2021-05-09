@@ -1,17 +1,17 @@
-import {Module} from '@nestjs/common';
-import {AppController} from './app.controller';
-import {AppService} from './app.service';
-import {MongooseModule} from "@nestjs/mongoose";
-import {UserModule} from './users/user.module';
-import {RefreshTokensModule} from './refresh-tokens/refresh-tokens.module';
-import {BimCatsModule} from './bim-cats/bim-cats.module';
-import {LauncherModule} from './launcher/launcher.module';
-import {ThrottlerGuard, ThrottlerModule} from "@nestjs/throttler";
-import {APP_GUARD} from "@nestjs/core";
-import {ServeStaticModule} from "@nestjs/serve-static";
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { UserModule } from './users/user.module';
+import { RefreshTokensModule } from './refresh-tokens/refresh-tokens.module';
+import { BimCatsModule } from './bim-cats/bim-cats.module';
+import { LauncherModule } from './launcher/launcher.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MailModule } from './mail/mail.module';
-import * as config from 'config'
+import * as config from 'config';
 
 @Module({
     imports: [
@@ -19,7 +19,7 @@ import * as config from 'config'
             useNewUrlParser: true,
             useFindAndModify: false,
             useUnifiedTopology: true,
-            useCreateIndex: true
+            useCreateIndex: true,
         }),
         UserModule,
         RefreshTokensModule,
@@ -39,9 +39,8 @@ import * as config from 'config'
         AppService,
         {
             provide: APP_GUARD,
-            useClass: ThrottlerGuard
-        }
+            useClass: ThrottlerGuard,
+        },
     ],
 })
-export class AppModule {
-}
+export class AppModule {}
