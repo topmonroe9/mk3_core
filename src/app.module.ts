@@ -30,7 +30,7 @@ import * as config from 'config'
             limit: 100,
         }),
         ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', '..', 'mk3Public', 'website'),
+            rootPath: join(__dirname, '..', '..', 'mk3-public', 'website'),
         }),
         MailModule,
     ],

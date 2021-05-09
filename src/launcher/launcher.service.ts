@@ -1,38 +1,44 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {InjectModel} from "@nestjs/mongoose";
-import {Model} from "mongoose";
-import {Launcher, LauncherDocument} from "@schemas/launcher.schema";
-import * as mongoose from "mongoose";
-import {UserDto} from "../users/dto/UserDto";
-import {User, UserDocument} from "@schemas/user.schema";
-import {Role} from "@interfaces/role.enum";
-
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Launcher, LauncherDocument } from '@schemas/launcher.schema';
+import * as mongoose from 'mongoose';
+import { UserDto } from '../users/dto/UserDto';
+import { User, UserDocument } from '@schemas/user.schema';
+import { Role } from '@interfaces/role.enum';
 
 @Injectable()
 export class LauncherService {
-    constructor(@InjectModel(Launcher.name) private launcherModel: Model<LauncherDocument>,
-                @InjectModel(User.name) private userModel: Model<UserDocument>) {
+    constructor(
+        @InjectModel(Launcher.name)
+        private launcherModel: Model<LauncherDocument>,
+        @InjectModel(User.name) private userModel: Model<UserDocument>,
+    ) {}
+
+    public async getLatest(): Promise<LauncherDto> {
+        const launcher: LauncherDocument = await this.launcherModel
+            .findOne()
+            .sort({ version: -1 })
+            .limit(1);
+        return this.basicDetails(launcher);
     }
 
-    public async getLatest(): Promise<LauncherDto>{
-        const launcher: LauncherDocument = await
-            this.launcherModel.findOne().sort({version: -1}).limit(1)
-        return this.basicDetails(launcher)
-    }
-
-    public async getById(id: string): Promise<LauncherDto>{
-        const launcher = await this.getLauncher(id)
-        return this.basicDetails(launcher)
+    public async getById(id: string): Promise<LauncherDto> {
+        const launcher = await this.getLauncher(id);
+        return this.basicDetails(launcher);
     }
 
     public async getAll(): Promise<LauncherDto[]> {
-        const launchers = await this.launcherModel.find().sort({version: -1})
-        return launchers.map(x=>this.basicDetails(x))
+        const launchers = await this.launcherModel.find().sort({ version: -1 });
+        return launchers.map((x) => this.basicDetails(x));
     }
 
     public async create(params: LauncherDto): Promise<LauncherDto> {
         if (await this.launcherModel.findOne({ version: params.version })) {
-            throw new HttpException(`Версия ${params.version}" уже существует`, HttpStatus.CONFLICT);
+            throw new HttpException(
+                `Версия ${params.version}" уже существует`,
+                HttpStatus.CONFLICT,
+            );
         }
 
         const launcher = new this.launcherModel(params);
@@ -53,45 +59,57 @@ export class LauncherService {
     }
 
     public async delete(id: string): Promise<void> {
-        const launcher = await this.getLauncher(id)
-        await launcher.remove()
+        const launcher = await this.getLauncher(id);
+        await launcher.remove();
     }
 
-    public async downloadById(id:string): Promise<string> {
-        const launcher = await this.getLauncher(id)
-    return launcher.downloadLink
+    public async downloadById(id: string): Promise<string> {
+        const launcher = await this.getLauncher(id);
+        return launcher.downloadLink;
     }
 
     public async downloadLatest(user: UserDto, ip: string): Promise<string> {
-        const account = await this.userModel.findOne({_id: user.id})
+        const account = await this.userModel.findOne({ _id: user.id });
 
-        this.checkDownloadRestriction(account, user)
+        this.checkDownloadRestriction(account, user);
 
-        const launcher = await this.launcherModel.findOne().sort({version:-1}).limit(1)
+        const launcher = await this.launcherModel
+            .findOne()
+            .sort({ version: -1 })
+            .limit(1);
         // increase counter of downloads
-        await this.launcherDownloadCounter(user, ip)
+        await this.launcherDownloadCounter(user, ip);
 
         return launcher.downloadLink;
     }
 
     private async launcherDownloadCounter(user: UserDto, ip: string) {
         if (!this.isAdminOrManager(user)) {
-            await this.userModel.updateOne({_id: user.id}, {
-                $inc: {"launcherDownloaded":1 },
-                $push: {"downloadedFrom": ip }
-            })
+            await this.userModel.updateOne(
+                { _id: user.id },
+                {
+                    $inc: { launcherDownloaded: 1 },
+                    $push: { downloadedFrom: ip },
+                },
+            );
         }
     }
 
     private isAdminOrManager(reqUser: UserDto): boolean {
-        return reqUser.roles.some( (r) => [Role.Admin, Role.Manager].includes(r) )
+        return reqUser.roles.some((r) =>
+            [Role.Admin, Role.Manager].includes(r),
+        );
     }
 
     private checkDownloadRestriction(account: UserDocument, reqUser: UserDto) {
-        if (account.launcherDownloaded >= 3 && !this.isAdminOrManager(reqUser) ) {
-            throw new HttpException("Превышен лимит на скачивание. Инцидент зафиксирован. Свяжитесь со своим руководителем.",
-                HttpStatus.METHOD_NOT_ALLOWED)
-
+        if (
+            account.launcherDownloaded >= 3 &&
+            !this.isAdminOrManager(reqUser)
+        ) {
+            throw new HttpException(
+                'Превышен лимит на скачивание. Инцидент зафиксирован. Свяжитесь со своим руководителем.',
+                HttpStatus.METHOD_NOT_ALLOWED,
+            );
         }
     }
 
@@ -108,8 +126,7 @@ export class LauncherService {
     }
 
     private basicDetails(launcher: LauncherDocument): LauncherDto {
-        const { id, version, downloadLink} = launcher;
-        return { id, version, downloadLink};
+        const { id, version, downloadLink } = launcher;
+        return { id, version, downloadLink };
     }
-
 }
