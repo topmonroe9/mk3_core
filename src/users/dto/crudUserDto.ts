@@ -11,5 +11,5 @@ export class CrudUserDto {
     readonly lastName: string
     readonly isVerified: boolean
     readonly suspended: boolean
-    readonly allowedBimCats: []
+    readonly allowedBimCat: []
 }

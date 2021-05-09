@@ -1,6 +1,6 @@
 {
     "security": {
-        "jwtPrivateKey": "crm_jwtPrivateKey"
+        "jwtPrivateKey": "JWT_PRIVATE_KEY"
     },
     "db": {
         "mongoDBUri": "DB_URI"

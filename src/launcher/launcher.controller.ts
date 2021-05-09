@@ -16,6 +16,7 @@ export class LauncherController {
         return this.launcherService.getLatest()
             .then( launcher => {
                 return launcher
+                // todo maybe we should return a version number?
             })
     }
 
@@ -51,7 +52,6 @@ export class LauncherController {
 
     @Get('/download/latest')
     @UseGuards(RolesGuard)
-    @Roles(Role.Admin)
     async downloadLatest(@Req() req, @Res() res) {
         return this.  launcherService.downloadLatest(req.user, req.ip)
             .then( file => {

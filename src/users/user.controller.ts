@@ -176,6 +176,7 @@ export class UserController {
         if (!isAdminOrManager)
             body = _.pick(body, ['firstName','lastName','password'])
 
+        console.log(body)
         return this.userService.update(req.params.id, body)
             .then( account => {
                 return account
@@ -185,8 +186,8 @@ export class UserController {
     @Delete('id/:id')
     @UseGuards(RolesGuard)
     @Roles(Role.Admin)
-    async delete(@Param() id: string) {
-        return this.userService.delete(id)
+    async delete(@Param() param) {
+        return this.userService.delete(param.id)
             .then(() => {
                 return { message: 'Аккаунт удален.' }
             })
@@ -198,7 +199,8 @@ export class UserController {
         console.log(req.user.id)
         return this.userService.getAccount(req.user.id)
             .then( account => {
-                return account as UserDto
+                console.log(this.userService.basicDetails(account))
+                return this.userService.basicDetails(account)
             })
     }
 

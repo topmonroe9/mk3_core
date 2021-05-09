@@ -25,4 +25,43 @@ export class MailService {
         });
         return
     }
+
+    async sendWelcomeEmail(user: UserDocument) {
+        await this.mailerService.sendMail({
+            to: user.email,
+            subject: 'Добро пожаловать!',
+            template: './templates/welcome.hbs',
+            context: {
+                firstName: user.firstName,
+            }
+        });
+        return
+    }
+
+
+    async sendPasswordResetEmail(user: UserDocument) {
+        const resetUrl = `${this.domain}#/account/reset-password?token=${user.resetToken.token}`
+        await this.mailerService.sendMail({
+            to: user.email,
+            subject: 'Восстановление пароля',
+            template: './templates/passwordReset.hbs',
+            context: {
+                firstName: user.firstName,
+                resetUrl
+            }
+        });
+        return
+    }
+
+    async notifyBimCatOpened(user: UserDocument) {
+        await this.mailerService.sendMail({
+            to: user.email,
+            subject: 'Открыт доступ к плагину',
+            template: './templates/notifyBimCatOpened.hbs',
+            context: {
+                firstName: user.firstName,
+            }
+        });
+        return
+    }
 }

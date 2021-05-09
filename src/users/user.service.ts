@@ -13,12 +13,14 @@ import {Role} from "../_interfaces/role.enum";
 import {UserDto} from "./dto/UserDto";
 import {ForgotPwdDto, LoginUserDto, RegisterUserDto, ResetPwdDto, ValidateResetTokenDto, VerifyEmailDto} from "./dto";
 import {CrudUserDto} from "./dto/crudUserDto";
+import {Employee, EmployeeDocument} from "@schemas/employee.schema";
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(RefreshToken.name) private refreshTokenModel: Model<RefreshTokenDocument>,
+        @InjectModel(Employee.name) private employeeModel: Model<EmployeeDocument>,
         private mailService: MailService,
     ) {
     }
@@ -51,8 +53,7 @@ export class UserService {
     public async register(params: RegisterUserDto): Promise<void> {
         ;
         if (await this.userModel.findOne({email: params.email})) {
-            // send already registered error in email to prevent account enumeration
-            // return await this.sendAlreadyRegisteredEmail(params.email, origin);
+            throw new HttpException('Пользователь с указанной почтой уже зарегистрирован.', HttpStatus.CONFLICT)
         }
 
         // create account object
@@ -77,7 +78,7 @@ export class UserService {
         return
     }
 
-    public async getById(id) {
+    public async getById(id): Promise<UserDto> {
         const user = await this.getAccount(id);
         return this.basicDetails(user)
     }
@@ -88,7 +89,7 @@ export class UserService {
 
     public async refreshToken(data: { token: string, ipAddress: string }) {
         const refreshToken: RefreshTokenDocument = await this.getRefreshToken(data.token);
-        const {account} = refreshToken;
+        const account = await this.getAccount(refreshToken.account.id)
         // replace old refresh token with a new one and save
         const newRefreshToken = this.generateRefreshToken(account, data.ipAddress);
         refreshToken.revoked = new Date(Date.now());
@@ -97,9 +98,14 @@ export class UserService {
         await refreshToken.save();
         await newRefreshToken.save();
 
+        account.lastActive = new Date(Date.now())
+        if (!account.loginsFromIp.includes(data.ipAddress))
+            account.loginsFromIp.push(data.ipAddress)
+
         // generate new jwt
         const jwtToken = this.generateJwtToken(account);
 
+        await account.save()
         // return basic details and tokens
         return {
             ...this.basicDetails(account),
@@ -109,7 +115,8 @@ export class UserService {
     }
 
     public async getRefreshToken(token: string): Promise<RefreshTokenDocument> {
-        const refreshToken: RefreshTokenDocument = await this.refreshTokenModel.findOne({token}).populate('account');
+        const refreshToken: RefreshTokenDocument = await this.refreshTokenModel
+            .findOne({token}).populate('account');
         if (!refreshToken || !refreshToken.isActive) {
             throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
         }
@@ -126,14 +133,15 @@ export class UserService {
     }
 
     public async verifyEmail({token}: VerifyEmailDto) {
-        const account = await this.userModel.findOne({token});
+        console.log(token)
+        const account = await this.userModel.findOne({verificationToken: token});
 
         if (!account) throw new HttpException('Не удалось подтвердить почту.', HttpStatus.INTERNAL_SERVER_ERROR);
 
         account.verified = new Date(Date.now());
         account.verificationToken = undefined;
         await account.save();
-        // todo send a welcome email
+        await this.mailService.sendWelcomeEmail(account);
     }
 
     public async forgotPassword(body: ForgotPwdDto, origin: string) {
@@ -150,46 +158,8 @@ export class UserService {
         await account.save();
 
         // send email
-        // await this.sendPasswordResetEmail(account, origin);
+        await this.mailService.sendPasswordResetEmail(account);
     }
-
-    // private async sendVerificationEmail(account: UserDto, origin: string) {
-    //     let message;
-    //     if (origin) {
-    //         const verifyUrl = `${origin}#/account/verify-email?token=${account.verificationToken}`;
-    //         message = `<p>Для завершения регистрации на портале MK3, пожалуйста, перейдите по следующей ссылке:</p>
-    //                <p><a href="${verifyUrl}">${verifyUrl}</a></p>`;
-    //     } else {
-    //         message = `<p>Используйте токен, указанный ниже для подтверждения регистрации. </br>API Адрес:<code>/users/verify-email</code></p>
-    //                <p><code>${account.verificationToken}</code></p>`;
-    //     }
-    //
-    //     await this.mailService.sendEmail({
-    //         to: account.email,
-    //         subject: 'M.K.3 CRM - Подтверждение регистрации',
-    //         html: `<h4>Подтверждение регистрации</h4>
-    //
-    //            ${message}`
-    //     });
-    // }
-
-//
-// async function sendAlreadyRegisteredEmail(email, origin) {
-//     let message;
-//     if (origin) {
-//         message = `<p>Если вы забыли свой пароль - вы можете восстановить его на странице <a href="${origin}#/account/forgot-password">восстановления пароля</a></p>`;
-//     } else {
-//         message = `<p>Если вы забыли свой пароль - вы можете восстановить его используя API <code>/users/forgot-password</code></p>`;
-//     }
-//
-//     await sendEmail({
-//         to: email,
-//         subject: 'М.К.3 Портал - аккаунт уже зарегистрирован',
-//         html: `<h4>Аккаунт уже зарегистрирован на портале М.К.3</h4>
-//                <p>Ваша почта <strong>${email}</strong> же зарегистрирована на портале М.К.3</p>
-//                ${message}`
-//     });
-// }
 
     public async validateResetToken({token}: ValidateResetTokenDto) {
         const account = await this.userModel.findOne({
@@ -203,10 +173,11 @@ export class UserService {
     public async resetPassword({token, password}: ResetPwdDto) {
         const account: UserDocument = await this.userModel.findOne({
             'resetToken.token': token,
-            'resetToken.expires': { $gt: Date.now() }
+            'resetToken.expires': {$gt: Date.now()}
         });
 
-        if (!account) throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
+        if (!account)
+            throw new HttpException('Пользователь не существует или неправильный токен', HttpStatus.BAD_REQUEST);
 
         // update password and remove reset token
         account.passwordHash = await this.hash(password);
@@ -217,17 +188,17 @@ export class UserService {
 
     public async getAll(): Promise<UserDto[]> {
         const accounts: UserDocument[] = await this.userModel.find().populate('allowedBimCat', ['_id', 'name']);
-        return accounts.map( x => this.basicDetails(x) )
+        return accounts.map(x => this.basicDetails(x))
     }
 
     public async create(params: CrudUserDto): Promise<UserDto> {
         // validate
-        if (await this.userModel.findOne({ email: params.email })) {
+        if (await this.userModel.findOne({email: params.email})) {
             throw new HttpException(`Аккаунт c почтой  "${params.email}" уже зарегистрирован`, HttpStatus.CONFLICT);
         }
 
         const account: UserDocument = new this.userModel(params);
-        account.verified = new Date( Date.now() );
+        account.verified = new Date(Date.now());
 
         // hash password
         account.passwordHash = await this.hash(params.password);
@@ -235,27 +206,30 @@ export class UserService {
         // save account
         await account.save();
 
-        return account as UserDto;
+        return this.basicDetails(account);
     }
 
     public async update(id: string, params: CrudUserDto) {
         const account: UserDocument = await this.getAccount(id);
-
         // validate (if email was changed)
-        if (params.email && account.email !== params.email && await this.userModel.findOne({ email: params.email })) {
+        if (params.email && account.email !== params.email && await this.userModel.findOne({email: params.email})) {
             throw new HttpException(`Почта "${params.email}" занята другим пользователем.`, HttpStatus.CONFLICT);
         }
         // hash password if it was entered
-        if (params.password) {
+        if (params.password && params.password != "") {
             params.passwordHash = await this.hash(params.password);
+        }
+
+        if (params.allowedBimCat && Object.entries(params.allowedBimCat) && !account.notifyBimCatOpened) {
+            await this.mailService.notifyBimCatOpened(account)
         }
 
         // copy params to account and save
         Object.assign(account, params);
-        account.updated = new Date( Date.now() );
+        account.updated = new Date(Date.now());
 
         // if suspended
-        if (params.suspended) account.suspendedAt = new Date( Date.now() )
+        if (params.suspended) account.suspendedAt = new Date(Date.now())
         if (!params.suspended) account.suspendedAt = undefined
 
         await account.save();
@@ -269,36 +243,11 @@ export class UserService {
     }
 
     public async getAccount(id: string): Promise<UserDocument> {
-        console.log(id)
-        if ( !this.isValidId(id) ) throw new HttpException('Wrong id', HttpStatus.NOT_FOUND);
-        const account: UserDocument = await this.userModel.findById(id)
+        if (!this.isValidId(id)) throw new HttpException('Wrong id', HttpStatus.NOT_FOUND);
+        const account: UserDocument = await this.userModel.findById(id).populate('allowedBimCat', ['_id', 'name'])
         if (!account) throw new HttpException('Account not found', HttpStatus.NOT_FOUND);
         return account;
     }
-
-    private async validate(userData): Promise<User> {
-        return await this.findByEmail(userData.email);
-    }
-
-    // private async sendPasswordResetEmail(account: User, origin: string) {
-    //     let message;
-    //     if (origin) {
-    //         const resetUrl = `${origin}#/account/reset-password?token=${account.resetToken.token}`;
-    //         message = `<p>Перейдите по следующей ссылке для изменения пароля. Ссылка активна 24 часа.</p>
-    //                <p><a href="${resetUrl}">${resetUrl}</a></p>
-    //                 <p><br><br>Если вы не совершали сброс пароля, пожалуйста, в целях безопасности, перешлите это сообщение системному администратору</p>`;
-    //     } else {
-    //         message = `<p>Используйте следующий токен для восстановления пароля. API адрес: <code>/users/reset-password</code> </p>
-    //                <p><code>${account.resetToken.token}</code></p>`;
-    //     }
-    //
-    //     await this.mailService.sendEmail({
-    //         to: account.email,
-    //         subject: 'М.К.3 Портал - Восстановление пароля',
-    //         html: `<h4>М.К.3 - Восстановление пароля</h4>
-    //            ${message}`
-    //     });
-    // }
 
     private emailIsMk3(email) {
         let regEx = /^[a-zA-Z0-9_.+-]+@(?:(?:[a-zA-Z0-9-]+\.)?[a-zA-Z]+\.)?(mk3)\.ru$/
@@ -307,19 +256,18 @@ export class UserService {
         return false
     }
 
-    private async isEmployee(user) {
-        // todo connect employee db
-        throw new HttpException('Employee DB not connected', HttpStatus.NOT_IMPLEMENTED)
-        // const employee = await Employee.findOne({
-        //     FirstName: /user.firstName/i,
-        //     LastName: /user.lastName/i
-        // })
-        // if (employee) return true
+    private async isEmployee(user: UserDocument): Promise<boolean> {
+        const employee = await this.employeeModel.findOne({
+            FirstName: user.firstName,
+            LastName: user.lastName
+        })
+        console.log(employee)
+        if (employee) return true
 
         return false
     }
 
-    private randomTokenString() {
+    private randomTokenString(): string {
         return randomBytes(40).toString('hex');
     }
 
@@ -349,14 +297,18 @@ export class UserService {
     }
 
     public basicDetails(account: UserDocument): UserDto {
-        const { id, firstName, lastName, email, roles, created, updated,
-            isVerified, allowedBimCat, launcherDownloaded, downloadedFrom, suspended } = account;
-        return { id, firstName, lastName, email, roles, created, updated,
+        const {
+            id, firstName, lastName, email, roles, created, updated, passwordReset,
+            verified, resetToken, verificationToken,loginsFromIp, lastLoginIp, lastActive,
+            isVerified, allowedBimCat, launcherDownloaded, downloadedFrom, suspended, suspendedAt
+        } = account;
+        return {
+            id, firstName, lastName, email, roles, created, updated,
             isVerified, allowedBimCat,
-            passwordReset: undefined,
-            resetToken: {expires: undefined, token: ""},
-            verificationToken: "",
-            verified: undefined,
-            launcherDownloaded, downloadedFrom, suspended  };
+            passwordReset,
+            resetToken,
+            verificationToken,loginsFromIp, lastLoginIp, lastActive, verified,
+            launcherDownloaded, downloadedFrom, suspended, suspendedAt
+        };
     }
 }

@@ -64,21 +64,35 @@ export class LauncherService {
 
     public async downloadLatest(user: UserDto, ip: string): Promise<string> {
         const account = await this.userModel.findOne({_id: user.id})
-        const AdminOrManager = user.roles.some( (r) => [Role.Admin, Role.Manager].includes(r) )
 
-        if (account.launcherDownloaded >= 3 && !AdminOrManager ) {
+        this.checkDownloadRestriction(account, user)
+
+        const launcher = await this.launcherModel.findOne().sort({version:-1}).limit(1)
+        // increase counter of downloads
+        await this.launcherDownloadCounter(user, ip)
+
+        return launcher.downloadLink;
+    }
+
+    private async launcherDownloadCounter(user: UserDto, ip: string) {
+        if (!this.isAdminOrManager(user)) {
+            await this.userModel.updateOne({_id: user.id}, {
+                $inc: {"launcherDownloaded":1 },
+                $push: {"downloadedFrom": ip }
+            })
+        }
+    }
+
+    private isAdminOrManager(reqUser: UserDto): boolean {
+        return reqUser.roles.some( (r) => [Role.Admin, Role.Manager].includes(r) )
+    }
+
+    private checkDownloadRestriction(account: UserDocument, reqUser: UserDto) {
+        if (account.launcherDownloaded >= 3 && !this.isAdminOrManager(reqUser) ) {
             throw new HttpException("Превышен лимит на скачивание. Инцидент зафиксирован. Свяжитесь со своим руководителем.",
                 HttpStatus.METHOD_NOT_ALLOWED)
 
         }
-        // increase counter of downloads
-        await this.userModel.updateOne({_id: user.id}, {
-            $inc: {"launcherDownloaded":1 },
-            $push: {"downloadedFrom": ip }
-        })
-
-        const launcher = await this.launcherModel.findOne().sort({version:-1}).limit(1)
-        return launcher.downloadLink;
     }
 
     private async getLauncher(id: string): Promise<LauncherDocument> {

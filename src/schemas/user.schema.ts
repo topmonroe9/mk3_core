@@ -1,8 +1,9 @@
 import {Prop, raw, Schema, SchemaFactory} from "@nestjs/mongoose";
 import { Document } from 'mongoose';
-import { Role } from "@interfaces/role.enum";
+import { Role } from "../_interfaces/role.enum";
 import * as mongoose from "mongoose";
-import {BimCat, BimCatDocument} from "@schemas/bimCategory.schema";
+import {BimCat, BimCatDocument} from "./bimCategory.schema";
+import {BimCatDto} from "../bim-cats/dto";
 // import { ResetToken } from "@schemas/resetToken.shema";
 
 export type UserDocument = User & Document;
@@ -37,7 +38,7 @@ export class User {
     @Prop({type: Date})
     updated: Date
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: BimCat.name})
-    allowedBimCat: BimCatDocument // todo change this
+    allowedBimCat: BimCat
     @Prop({type: Boolean, default: false})
     suspended: boolean
     @Prop({type: Date})
@@ -48,15 +49,29 @@ export class User {
     launcherDownloaded: Number
     @Prop({type: [String] })
     downloadedFrom: string[]
-//     loginsFromIp: {type: Array},
+    @Prop({type: [String] })
+    loginsFromIp: string[]
+    lastLoginIp: string
+    @Prop({type: Date })
+    lastActive: Date
 //     loginsFromMAC: {type: Array}
     isVerified: boolean
+    notifyBimCatOpened: boolean
+
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
 UserSchema.virtual('isVerified').get(function () {
     return !!(this.verified || this.passwordReset);
+});
+UserSchema.virtual('notifyBimCatOpened').get(function () {
+    if( this.allowedBimCat == undefined || (Object.entries(this.allowedBimCat).length === 0))
+        return false;
+    return true;
+});
+UserSchema.virtual('lastLoginIp').get(function () {
+    return this.loginsFromIp[this.loginsFromIp.length - 1];
 });
 
 UserSchema.set('toJSON', {

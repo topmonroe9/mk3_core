@@ -6,15 +6,8 @@ import * as compression from 'compression';
 import * as config from "config";
 
 
-//
-// env.forEach( x => {
-//   if ( x == undefined) {
-//     console.log(`\n\n\x1b[31m One or more Environment Variable is undefined. \n\n\x1b[0m`)
-//     process.exit(1)
-//   }
-// })
-
-
+console.log(config.get('db.mongoDBUri'))
+ 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use( cookieParser() );
@@ -57,6 +50,7 @@ async function bootstrap() {
   // }))
 
   await app.listen(port);
+
   console.log(`\n\n\x1b[32m Server started listentning on port \x1b[33m${port}. \n\n\x1b[0m`)
 
 }

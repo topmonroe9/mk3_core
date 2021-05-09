@@ -1,8 +1,8 @@
 import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import {InjectModel, MongooseModule} from "@nestjs/mongoose";
-import {User, UserDocument, UserSchema} from "@schemas/user.schema";
+import {User, UserDocument, UserSchema} from "../schemas/user.schema";
 import {Model} from "mongoose";
-import {BimCat, BimCatDocument} from "@schemas/bimCategory.schema";
+import {BimCat, BimCatDocument} from "../schemas/bimCategory.schema";
 import * as mongoose from "mongoose";
 import {BimCatDto} from "./dto/bimCat.dto";
 
@@ -71,7 +71,7 @@ export class BimCatsService {
         return bimCat;
     }
 
-    private basicDetails(bimCat: BimCatDocument): BimCatDto {
+    private basicDetails(bimCat: BimCatDocument | BimCat): BimCatDto {
         const { id, name, updated} = bimCat;
         return { id, name, updated};
     }

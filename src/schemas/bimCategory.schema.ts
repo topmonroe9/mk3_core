@@ -4,7 +4,7 @@ import { Document } from 'mongoose';
 
 @Schema({ collection: 'bimcategories' })
 export class BimCat {
-
+    id: string
     @Prop({ required: true, unique: true, type: String })
     name: string
     @Prop({ type: Date })
