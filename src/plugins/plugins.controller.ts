@@ -1,4 +1,4 @@
-import {Controller, Param, Post, Res, UseGuards} from '@nestjs/common';
+import {Controller, Param, Get, Res, UseGuards} from '@nestjs/common';
 import {RolesGuard} from "../_guards/roles.guard";
 import { join } from "path";
 
@@ -6,9 +6,9 @@ import { join } from "path";
 export class PluginsController {
 
     @UseGuards(RolesGuard)
-    @Post("download/:fileName")
-    async downloadFile(@Param() param, @Res() res) {
-        const link = join(__dirname, '..', '..', '..', 'mk3-public', 'plugins', param);
+    @Get("download/:fileName")
+    async downloadFile(@Param() params, @Res() res) {
+        const link = join(__dirname, '..', '..', '..', 'mk3-public', 'plugins', params.fileName);
         return res.download(link)
     }
 }
