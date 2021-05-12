@@ -15,7 +15,6 @@ import {RefreshTokensModule} from "../refresh-tokens/refresh-tokens.module";
 RefreshTokensModule    ],
     providers: [
         LauncherService,
-
     ],
     controllers: [LauncherController]
 })

@@ -1,8 +1,8 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import * as mongoose from 'mongoose';
 import { Model } from 'mongoose';
 import { Launcher, LauncherDocument } from '@schemas/launcher.schema';
-import * as mongoose from 'mongoose';
 import { UserDto } from '../users/dto/UserDto';
 import { User, UserDocument } from '@schemas/user.schema';
 import { Role } from '@interfaces/role.enum';
@@ -86,10 +86,10 @@ export class LauncherService {
     private async launcherDownloadCounter(user: UserDto, ip: string) {
         if (!this.isAdminOrManager(user)) {
             await this.userModel.updateOne(
-                { _id: user.id },
+                { _id: user.id, roles: { $ne: [Role.Admin, Role.Manager] } },
                 {
                     $inc: { launcherDownloaded: 1 },
-                    $push: { downloadedFrom: ip },
+                    $addToSet: { downloadedFrom: ip },
                 },
             );
         }

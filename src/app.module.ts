@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MailModule } from './mail/mail.module';
+import { PluginsModule } from './plugins/plugins.module';
 import * as config from 'config';
 
 @Module({
@@ -33,6 +34,7 @@ import * as config from 'config';
             rootPath: join(__dirname, '..', '..', 'mk3-public', 'website'),
         }),
         MailModule,
+        PluginsModule,
     ],
     controllers: [AppController],
     providers: [

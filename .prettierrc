@@ -3,5 +3,5 @@
   "trailingComma": "all",
   "tabWidth": 4,
   "semi": true,
-  "bracketSpacing": true
+  "useTabs": false
 }

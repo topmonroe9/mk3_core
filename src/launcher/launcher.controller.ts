@@ -100,6 +100,6 @@ export class LauncherController {
     }
 
     private static generateLink(fileName: string): string {
-        return join(__dirname, '..', '..', 'mk3-public', 'launchers', fileName);
+        return join(__dirname, '..', '..', '..', 'mk3-public', 'launchers', fileName);
     }
 }
