@@ -3,8 +3,8 @@
   "server": {
     "internalIP": "192.168.10.153",
     "publicIP": "195.91.134.124",
-    "port": "80",
-    "origin": "http://crm.mk3.ru"
+    "port": "8080",
+    "origin": "https://crm.mk3.ru"
   },
   "security": {
     "jwtPrivateKey": "",

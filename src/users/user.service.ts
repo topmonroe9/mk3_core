@@ -166,7 +166,6 @@ export class UserService {
     }
 
     public async verifyEmail({ token }: VerifyEmailDto) {
-        console.log(token);
         const account = await this.userModel.findOne({
             verificationToken: token,
         });
@@ -327,7 +326,6 @@ export class UserService {
             FirstName: user.firstName,
             LastName: user.lastName,
         });
-        console.log(employee);
         if (employee) return true;
 
         return false;

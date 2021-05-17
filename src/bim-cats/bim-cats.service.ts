@@ -37,7 +37,6 @@ export class BimCatsService {
         if ( await this.bimCatModel.findOne({ name: params.name }) ) {
             throw new HttpException(`Категория "${params.name}" уже существует`, HttpStatus.CONFLICT);
         }
-        console.log(BimCat, params)
         const bimCat = new this.bimCatModel(params);
         await bimCat.save();
 

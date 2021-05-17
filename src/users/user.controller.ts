@@ -140,7 +140,6 @@ export class UserController {
 
         return this.userService.getAccount(req.params.id)
             .then( (account) => {
-                console.log(account)
                 return this.userService.basicDetails(account)
             })
     }
@@ -176,7 +175,6 @@ export class UserController {
         if (!isAdminOrManager)
             body = _.pick(body, ['firstName','lastName','password'])
 
-        console.log(body)
         return this.userService.update(req.params.id, body)
             .then( account => {
                 return account
@@ -196,10 +194,8 @@ export class UserController {
     @Get('me')
     @UseGuards(RolesGuard)
     async getCurrent(@Req() req) {
-        console.log(req.user.id)
         return this.userService.getAccount(req.user.id)
             .then( account => {
-                console.log(this.userService.basicDetails(account))
                 return this.userService.basicDetails(account)
             })
     }

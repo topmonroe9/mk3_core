@@ -4,9 +4,8 @@ import { join } from "path";
 
 @Controller('api/plugins')
 export class PluginsController {
-
     @UseGuards(RolesGuard)
-    @Get("download/:fileName")
+    @Get('download/:fileName')
     async downloadFile(@Param() params, @Res() res) {
         const link = join(__dirname, '..', '..', '..', 'mk3-public', 'plugins', params.fileName);
         return res.download(link)
