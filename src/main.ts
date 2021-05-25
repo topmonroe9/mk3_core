@@ -12,17 +12,18 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
-
 async function bootstrap() {
-
     const origin: string = config.get('server.origin');
     const port: string = config.get('server.port');
 
-    const httpsOptions = {
-        key: fs.readFileSync(path.join(__dirname, 'secrets', 'key.pem'), 'utf8'),
-        cert: fs.readFileSync(path.join(__dirname, 'secrets', 'crm_mk3_ru_2022_05_14.pem'), 'utf8'),
-        ca: [fs.readFileSync(path.join(__dirname, 'secrets', 'intermediate_pem_thawte_ssl123_1.pem'), 'utf8')],
-    };
+    let httpsOptions;
+    if (process.env.NODE_ENV === 'production') {
+        httpsOptions = {
+            key: fs.readFileSync(path.join(__dirname, 'secrets', 'key.pem'), 'utf8'),
+            cert: fs.readFileSync(path.join(__dirname, 'secrets', 'crm_mk3_ru_2022_05_14.pem'), 'utf8'),
+            ca: [fs.readFileSync(path.join(__dirname, 'secrets', 'intermediate_pem_thawte_ssl123_1.pem'), 'utf8')],
+        };
+    }
 
     const app = await NestFactory.create(AppModule, {
         httpsOptions,
@@ -45,7 +46,7 @@ async function bootstrap() {
                 'script-src-attr': ['none'],
                 'style-src': ["'self'", 'https:', "'unsafe-inline'"],
             },
-        }),
+        })
     );
     app.use(helmet.dnsPrefetchControl());
     app.use(helmet.expectCt());
@@ -64,8 +65,6 @@ async function bootstrap() {
     });
 
     await app.listen(`${port}`);
-    console.log(
-        `\n\n\x1b[32m Server started listentning on port \x1b[33m${port}. \n\n\x1b[0m`,
-    );
+    console.log(`\n\n\x1b[32m Server started listentning on port \x1b[33m${port}. \n\n\x1b[0m`);
 }
 bootstrap();
