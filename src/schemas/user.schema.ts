@@ -40,7 +40,9 @@ export class User {
     @Prop({ type: Date })
     updated: Date;
     @Prop({ type: mongoose.Schema.Types.ObjectId, ref: BimCat.name })
-    allowedBimCat: BimCat;
+    allowedBimCat: mongoose.Schema.Types.ObjectId | BimCat;
+    @Prop({ type: Boolean })
+    pluginAccessGranted: boolean;
     @Prop({ type: Boolean, default: false })
     suspended: boolean;
     @Prop({ type: Date })

@@ -1,5 +1,8 @@
+import mongoose from 'mongoose';
+
 export class BimCatDto {
-    id: string
-    name: string
-    updated: Date
+    id: mongoose.Schema.Types.ObjectId;
+    name: string;
+    code: string;
+    updated: Date;
 }
