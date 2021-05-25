@@ -187,7 +187,7 @@ export class UserController {
 
         // managers can only change bimCats of other users
         if (changingAnotherUser && isManager)
-            body = _.pick(body, ['allowedBimCats', 'pluginAccessGranted']);
+            body = _.pick(body, ['allowedBimCats', 'pluginAccessGranted', 'isSuspended']);
 
         if (!isAdminOrManager)
             body = _.pick(body, ['firstName', 'lastName', 'password']);
