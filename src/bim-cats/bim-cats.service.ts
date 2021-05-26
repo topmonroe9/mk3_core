@@ -20,6 +20,8 @@ export class BimCatsService {
 
     public async getByCode(code: string): Promise<BimCatDto> {
         const bimCat = await this.bimCatModel.findOne({ code: code });
+        console.log('bimcat: ', bimCat);
+        console.log('code: ', code);
         return this.basicDetails(bimCat);
     }
 
@@ -52,7 +54,6 @@ export class BimCatsService {
     public async update(id: string, params: BimCatDto): Promise<BimCatDto> {
         const bimCat = await this.getBimCat(id);
 
-        // copy params to category and save
         Object.assign(bimCat, params);
         bimCat.updated = new Date(Date.now());
         await bimCat.save();

@@ -6,6 +6,7 @@ import {
     HttpException,
     HttpStatus,
     Param,
+    Patch,
     Post,
     Put,
     Req,
@@ -19,14 +20,7 @@ import { UserService } from './user.service';
 import { Role } from '../_interfaces/role.enum';
 import { Roles } from '../_decorators/roles.decorator';
 import { RolesGuard } from '../_guards/roles.guard';
-import {
-    ForgotPwdDto,
-    LoginUserDto,
-    RegisterUserDto,
-    ResetPwdDto,
-    Validation,
-    VerifyEmailDto,
-} from './dto';
+import { ForgotPwdDto, LoginUserDto, RegisterUserDto, ResetPwdDto, Validation, VerifyEmailDto } from './dto';
 import { UserDto } from './dto/UserDto';
 import { CrudUserDto } from './dto/crudUserDto';
 import _ = require('lodash');
@@ -36,11 +30,7 @@ export class UserController {
     constructor(private userService: UserService) {}
 
     @Post('authenticate')
-    async authenticate(
-        @Body() user: LoginUserDto,
-        @Req() req,
-        @Res({ passthrough: true }) res
-    ) {
+    async authenticate(@Body() user: LoginUserDto, @Req() req, @Res({ passthrough: true }) res) {
         return this.userService
             .login({
                 email: user.email,
@@ -57,12 +47,10 @@ export class UserController {
     refreshToken(@Req() request, @Res() res) {
         const token = request.cookies.refreshToken;
         const ipAddress = request.ip;
-        return this.userService
-            .refreshToken({ token, ipAddress })
-            .then(({ refreshToken, ...account }) => {
-                this.setTokenCookie(res, refreshToken);
-                res.send(account);
-            });
+        return this.userService.refreshToken({ token, ipAddress }).then(({ refreshToken, ...account }) => {
+            this.setTokenCookie(res, refreshToken);
+            res.send(account);
+        });
     }
 
     @Post('revoke-token')
@@ -72,11 +60,7 @@ export class UserController {
         const token = req.body.token || req.cookies.refreshToken;
         const ipAddress = req.ip;
 
-        if (!token)
-            throw new HttpException(
-                'Token is required',
-                HttpStatus.BAD_GATEWAY
-            );
+        if (!token) throw new HttpException('Token is required', HttpStatus.BAD_GATEWAY);
 
         //users can revoke their own tokens and admins can revoke any tokens
         if (!req.user.ownsToken(token) && req.user.roles.includes(Role.Admin)) {
@@ -93,8 +77,7 @@ export class UserController {
     async register(@Body() body: RegisterUserDto) {
         return this.userService.register(body).then(() => {
             return {
-                message:
-                    'Данные приняты. Проверьте электронную почту для подтверждения регистрации.',
+                message: 'Данные приняты. Проверьте электронную почту для подтверждения регистрации.',
             };
         });
     }
@@ -110,14 +93,11 @@ export class UserController {
     @Post('forgot-password')
     @UsePipes(new JoiValidationPipe(Validation.forgotPassword))
     async forgotPassword(@Req() req, @Body() body: ForgotPwdDto) {
-        return this.userService
-            .forgotPassword(body, req.get('origin'))
-            .then(() => {
-                return {
-                    message:
-                        'Инструкции по восстановлению пароля отправлены на почту.',
-                };
-            });
+        return this.userService.forgotPassword(body, req.get('origin')).then(() => {
+            return {
+                message: 'Инструкции по восстановлению пароля отправлены на почту.',
+            };
+        });
     }
 
     @Post('validate-reset-token')
@@ -149,9 +129,7 @@ export class UserController {
     @UseGuards(RolesGuard)
     getById(@Req() req) {
         // users can get their own account and admins can get any account
-        const AdminOrManager = req.user.roles.some((r) =>
-            [Role.Admin, Role.Manager].includes(r)
-        );
+        const AdminOrManager = req.user.roles.some((r) => [Role.Admin, Role.Manager].includes(r));
         if (req.params.id !== req.user.id && !AdminOrManager) {
             throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
@@ -176,25 +154,36 @@ export class UserController {
     @UsePipes(new JoiValidationPipe(Validation.update))
     async update(@Req() req, @Body() body: CrudUserDto) {
         // users can update their own account and admins can update any account
-        const isAdminOrManager =
-            req.user.roles.includes(Role.Manager) ||
-            req.user.roles.includes(Role.Admin);
+        const isAdminOrManager = req.user.roles.includes(Role.Manager) || req.user.roles.includes(Role.Admin);
         const isManager = req.user.roles.includes(Role.Manager);
         const changingAnotherUser = req.params.id !== req.user.id;
 
-        if (changingAnotherUser && !isAdminOrManager)
-            throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+        if (changingAnotherUser && !isAdminOrManager) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
 
         // managers can only change bimCats of other users
         if (changingAnotherUser && isManager)
             body = _.pick(body, ['allowedBimCats', 'pluginAccessGranted', 'isSuspended']);
 
-        if (!isAdminOrManager)
-            body = _.pick(body, ['firstName', 'lastName', 'password']);
+        if (!isAdminOrManager) body = _.pick(body, ['firstName', 'lastName', 'password']);
 
         return this.userService.update(req.params.id, body).then((account) => {
             return account;
         });
+    }
+
+    @Patch()
+    @UseGuards(RolesGuard)
+    async updateMany(@Body() body) {
+        console.log(body);
+
+        this.userService
+            .updateMany(body)
+            .then(() => {
+                return { message: 'Операция завершена' };
+            })
+            .catch((err) => {
+                return { message: 'Операция завершена' };
+            });
     }
 
     @Delete('id/:id')

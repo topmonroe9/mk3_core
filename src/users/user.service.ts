@@ -2,7 +2,7 @@ import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nest
 import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from '@schemas/user.schema';
+import { User, UserDocument, UserSchema } from "@schemas/user.schema";
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
 import { RefreshToken, RefreshTokenDocument } from '@schemas/refresh-token.schema';
@@ -244,6 +244,17 @@ export class UserService {
         await account.save();
 
         return this.basicDetails(account);
+    }
+
+    public async updateMany(params: CrudUserDto[]): Promise<void> {
+        for await (const user of params) {
+            const account = await this.userModel.findById(user.id);
+            console.log(account);
+            Object.assign(account, user);
+            account.updated = new Date(Date.now());
+            await account.save(); //TODO refactor this crap to something more clever
+        }
+        return;
     }
 
     public async delete(id: string): Promise<void> {
