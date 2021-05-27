@@ -90,6 +90,19 @@ UserSchema.set('toJSON', {
     },
 });
 
+UserSchema.pre<UserDocument>('save', function (next) {
+    if (this.isModified('firstName')) {
+        this.firstName = this.firstName.toLowerCase().split(' ').join('');
+        this.firstName = this.firstName.charAt(0).toUpperCase() + this.firstName.slice(1);
+    }
+    if (this.isModified('lastName')) {
+        this.lastName = this.lastName.toLowerCase().split(' ').join('');
+        this.lastName = this.lastName.charAt(0).toUpperCase() + this.lastName.slice(1);
+    }
+    next();
+});
+
+
 export interface UserReq extends Request {
     sub: string;
     id: string;
