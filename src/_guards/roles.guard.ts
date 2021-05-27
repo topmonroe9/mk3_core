@@ -21,14 +21,13 @@ export class RolesGuard implements CanActivate {
             return false;
         }
 
-        // if (req.cookies.refreshToken)
-        //     throw new HttpException('RefreshToken Auth Not Implemented', HttpStatus.NOT_IMPLEMENTED)
-        if (req.headers.hasOwnProperty('secret-network') ) {
-            console.log('yes');
+        if (
+            req.headers.access === 'internal' &&
+            req.headers.authorization === `Bearer ${process.env.INTERNAL_API_KEY}`
+        ) {
             return true;
         }
 
-            console.log('no');
         req.user = await this.validateToken(req.headers.authorization);
         await this.validateUser(req);
 
