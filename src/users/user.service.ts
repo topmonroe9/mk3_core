@@ -246,15 +246,16 @@ export class UserService {
         return this.basicDetails(account);
     }
 
-    public async updateMany(params: CrudUserDto[]): Promise<void> {
-        for await (const user of params) {
+    public async updateMany(params: CrudUserDto[]): Promise<UserDto[]> {
+        const accounts: UserDocument[] = [];
+        for (const user of params) {
             const account = await this.userModel.findById(user.id);
-            console.log(account);
             Object.assign(account, user);
             account.updated = new Date(Date.now());
             await account.save(); //TODO refactor this crap to something more clever
+            accounts.push(account);
         }
-        return;
+        return accounts.map((acc) => this.basicDetails(acc));
     }
 
     public async delete(id: string): Promise<void> {

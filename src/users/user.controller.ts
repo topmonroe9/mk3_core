@@ -172,17 +172,34 @@ export class UserController {
     }
 
     @Patch()
-    @UseGuards(RolesGuard)
-    async updateMany(@Body() body) {
-        console.log(body);
+    @UseGuards(RolesGuard) // TODO Create a validation of input elements
+    // @UsePipes(new JoiValidationPipe(Validation.updateMany))
+    async updateMany(@Req() req, @Body() body) {
+        // users can update their own account and admins can update any account
+        const isAdminOrManager = req.user.roles.includes(Role.Manager) || req.user.roles.includes(Role.Admin);
+        const isManager = req.user.roles.includes(Role.Manager);
+        const changingAnotherUser = req.params.id !== req.user.id;
 
-        this.userService
+        if (changingAnotherUser && !isAdminOrManager) throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+
+        // managers can only change bimCats of other users
+        if (changingAnotherUser && isManager)
+            body = body.map((user) => {
+                _.pick(user, ['allowedBimCats', 'pluginAccessGranted', 'isSuspended']);
+            });
+
+        if (!isAdminOrManager)
+            body = body.map((user) => {
+                _.pick(user, ['firstName', 'lastName', 'password']);
+            });
+
+        return this.userService
             .updateMany(body)
-            .then(() => {
-                return { message: 'Операция завершена' };
+            .then((accounts) => {
+                return accounts;
             })
             .catch((err) => {
-                return { message: 'Операция завершена' };
+                return err;
             });
     }
 

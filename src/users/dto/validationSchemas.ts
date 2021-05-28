@@ -48,13 +48,16 @@ export const create = Joi.object({
 });
 
 export const update = Joi.object({
+    id: Joi.string().empty(''),
     firstName: Joi.string().empty(''),
     lastName: Joi.string().empty(''),
     email: Joi.string().email().empty(''),
     password: Joi.string().min(6).empty(''),
     confirmPassword: Joi.string().valid(Joi.ref('password')).empty(''),
-    allowedBimCat: Joi.string(),
-    pluginAccessGranted: Joi.boolean(),
-    suspended: Joi.bool(),
-    roles: Joi.array().items(Joi.string().valid(...Object.values(Role))),
+    allowedBimCat: Joi.string().empty(''),
+    pluginAccessGranted: Joi.boolean().empty(''),
+    suspended: Joi.bool().empty(''),
+    roles: Joi.array().items(Joi.string().valid(...Object.values(Role))).empty(''),
 });
+
+export const updateMany = Joi.array().has(update);
