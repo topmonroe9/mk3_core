@@ -9,13 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: ssh deploy
-        uses: easingthemes/ssh-deploy@v2.1.4
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_KEY }}
-          REMOTE_HOST: ${{ secrets.DEPLOY_HOST }}
-          REMOTE_USER: ${{ secrets.DEPLOY_USER }}
-          REMOTE_PORT: ${{ secrets.DEPLOY_PORT }}
-          SOURCE: ""
-          TARGET: ${{ secrets.DEPLOY_TARGET }}
+      - name: ssh-pipeline
+        # You may pin to the exact commit or the version.
+        # uses: cross-the-world/ssh-pipeline@7f022867934a210af826af99ef80d96f03a094d5
+        uses: cross-the-world/ssh-pipeline@v1.2.0
+        with:
+          # ssh remote host
+          host: ${{ secrets.DEPLOY_HOST }}
+          # ssh remote port
+          port: ${{ secrets.DEPLOY_PORT }}
+          # ssh remote user
+          user: ${{ secrets.DEPLOY_USER }}
+          # content of ssh private key. ex raw content of ~/.ssh/id_rsa
+          key: ${{ secrets.DEPLOY_KEY }}
+          # execute commands on ssh
+          script: 
+            git pull
+            npm run build
+            pm2 restart server
