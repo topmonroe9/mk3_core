@@ -15,8 +15,8 @@ jobs:
         port: ${{ secrets.DEPLOY_PORT }}
         debug: true
         script: |
-          cd C:\Users\Administrator\Documents\mk3-core
-          git pull
-          npm install
-          npm run build
+          cd C:\Users\Administrator\Documents\mk3-core |
+          git pull |
+          npm install |
+          npm run build |
           pm2 restart server
