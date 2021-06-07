@@ -23,7 +23,7 @@ jobs:
           # content of ssh private key. ex raw content of ~/.ssh/id_rsa
           key: ${{ secrets.DEPLOY_KEY }}
           # execute commands on ssh
-          script: 
+          script: |
             git pull
             npm run build
             pm2 restart server
