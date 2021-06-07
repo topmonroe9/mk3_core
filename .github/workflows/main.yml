@@ -6,16 +6,15 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-    - name: executing remote ssh commands using password
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USER }}
-        password: ${{ secrets.DEPLOY_PASSWORD }}
-        port: ${{ secrets.DEPLOY_PORT }}
-        script: |
-          cd Documents\mk3-core
-          git pull
-          npm install
-          npm run build
-          pm2 restart server
+      - name: pull and build via ssh
+        uses: fifsky/ssh-action@master
+        with:
+          command: |
+            cd documents/mk3-core
+            git pull
+            npm install
+            npm run build
+            pm2 restart server
+          host: ${{ secrets.DEPLOY_HOST }}
+          user: ${{ secrets.DEPLOY_USER }}
+          pass: ${{ secrets.DEPLOY_PASSWORD }}
