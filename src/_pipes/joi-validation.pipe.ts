@@ -1,9 +1,9 @@
 import { PipeTransform, Injectable, ArgumentMetadata, BadRequestException } from '@nestjs/common';
-import { ObjectSchema } from 'joi';
+import { ObjectSchema, ArraySchema } from 'joi';
 
 @Injectable()
 export class JoiValidationPipe implements PipeTransform {
-    constructor(private schema: ObjectSchema) {}
+    constructor(private schema: ObjectSchema | ArraySchema) {}
 
     transform(value: any, metadata: ArgumentMetadata) {
         const valid = this.schema.validate(value);
@@ -16,5 +16,5 @@ export class JoiValidationPipe implements PipeTransform {
 const options = {
     abortEarly: false, // include all errors
     allowUnknown: true, // ignore unknown props
-    stripUnknown: true // remove unknown props
+    stripUnknown: true, // remove unknown props
 };

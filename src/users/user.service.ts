@@ -2,19 +2,19 @@ import { forwardRef, HttpException, HttpStatus, Inject, Injectable } from '@nest
 import { InjectModel } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument, UserSchema } from "@schemas/user.schema";
+import { User, UserDocument, UserSchema } from '../schemas/user.schema';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { RefreshToken, RefreshTokenDocument } from '@schemas/refresh-token.schema';
+import { RefreshToken, RefreshTokenDocument } from '../schemas/refresh-token.schema';
 import * as jwt from 'jsonwebtoken';
 import { MailService } from '../mail/mail.service';
-import { Role } from '@interfaces/role.enum';
+import { Role } from '../_interfaces/role.enum';
 import * as config from 'config';
 
 import { UserDto } from './dto/UserDto';
 import { ForgotPwdDto, LoginUserDto, RegisterUserDto, ResetPwdDto, ValidateResetTokenDto, VerifyEmailDto } from './dto';
 import { CrudUserDto } from './dto/crudUserDto';
-import { Employee, EmployeeDocument } from '@schemas/employee.schema';
+import { Employee, EmployeeDocument } from '../schemas/employee.schema';
 import { BimCatsService } from '../bim-cats/bim-cats.service';
 
 @Injectable()
@@ -263,6 +263,11 @@ export class UserService {
         await account.remove();
     }
 
+    public async deleteMany(emails: string[]) {
+        await this.userModel.deleteMany({ email: { $in: emails } });
+        return emails;
+    }
+
     public async getAccount(id: string): Promise<UserDocument> {
         if (!this.isValidId(id)) throw new HttpException('Wrong id', HttpStatus.NOT_FOUND);
         const account: UserDocument = await this.userModel.findById(id).populate('allowedBimCat', ['_id', 'name']);
@@ -369,4 +374,6 @@ export class UserService {
             suspendedAt,
         };
     }
+
+
 }

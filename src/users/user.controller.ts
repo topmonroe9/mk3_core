@@ -212,6 +212,15 @@ export class UserController {
         });
     }
 
+    @Delete()
+    @UseGuards(RolesGuard)
+    @Roles(Role.Admin)
+    async deleteMany(@Body() body) {
+        return this.userService.deleteMany(body).then((deletedEmails) => {
+            return deletedEmails;
+        });
+    }
+
     @Get('me')
     @UseGuards(RolesGuard)
     async getCurrent(@Req() req) {
