@@ -21,7 +21,7 @@ jobs:
           # ssh remote user
           user: ${{ secrets.DEPLOY_USER }}
           # content of ssh private key. ex raw content of ~/.ssh/id_rsa
-          key: ${{ secrets.DEPLOY_KEY }}
+          pass: ${{ secrets.DEPLOY_PASS }}
           # execute commands on ssh
           script: |
             git pull
