@@ -15,14 +15,13 @@ jobs:
         with:
           # ssh remote host
           host: ${{ secrets.DEPLOY_HOST }}
-          # ssh remote port
-          port: ${{ secrets.DEPLOY_PORT }}
           # ssh remote user
           user: ${{ secrets.DEPLOY_USER }}
           # content of ssh private key. ex raw content of ~/.ssh/id_rsa
           pass: ${{ secrets.DEPLOY_PASS }}
           # execute commands on ssh
           script: |
+            cd documents/mk3-core
             git pull
             npm install
             npm run build
