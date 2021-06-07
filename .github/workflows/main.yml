@@ -1,0 +1,29 @@
+name: SSH Deploy
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ssh-pipeline
+        # You may pin to the exact commit or the version.
+        # uses: cross-the-world/ssh-pipeline@7f022867934a210af826af99ef80d96f03a094d5
+        uses: cross-the-world/ssh-pipeline@v1.2.0
+        with:
+          # ssh remote host
+          host: ${{ secrets.DEPLOY_HOST }}
+          # ssh remote port
+          port: ${{ secrets.DEPLOY_PORT }}
+          # ssh remote user
+          user: ${{ secrets.DEPLOY_USER }}
+          # content of ssh private key. ex raw content of ~/.ssh/id_rsa
+          key: ${{ secrets.DEPLOY_KEY }}
+          # execute commands on ssh
+          script: 
+            git pull
+            npm run build
+            pm2 restart server
