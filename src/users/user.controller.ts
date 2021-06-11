@@ -35,7 +35,7 @@ export class UserController {
             .login({
                 email: user.email,
                 password: user.password,
-                ipAddress: req.ip,
+                ipAddress: req.headers['x-forwarded-for'] || req.connection.remoteAddress,
             })
             .then((user) => {
                 this.setTokenCookie(res, user.refreshToken);
@@ -58,7 +58,7 @@ export class UserController {
     revokeToken(@Req() req) {
         // accept token from request body or cookie
         const token = req.body.token || req.cookies.refreshToken;
-        const ipAddress = req.ip;
+        const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 
         if (!token) throw new HttpException('Token is required', HttpStatus.BAD_GATEWAY);
 

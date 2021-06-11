@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -8,11 +8,22 @@ import { BimCatsModule } from './bim-cats/bim-cats.module';
 import { LauncherModule } from './launcher/launcher.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { MailModule } from './mail/mail.module';
 import { PluginsModule } from './plugins/plugins.module';
 import * as config from 'config';
+import { WinstonModule } from 'nest-winston';
+import * as winston from 'winston';
+import { AppLoggerMiddleware } from "./middleware/logger.middleware";
+
+
+const errorFileFormat = winston.format.printf(({ level, message, label, timestamp }) => {
+    return `${level}: ${timestamp} ${message}`;
+});
+const loggerFileFormat = winston.format.printf(({ level, message, label, timestamp }) => {
+    return `${level}: ${message}`;
+});
+
 
 @Module({
     imports: [
@@ -22,17 +33,30 @@ import * as config from 'config';
             useUnifiedTopology: true,
             useCreateIndex: true,
         }),
-        UserModule,
-        RefreshTokensModule,
-        BimCatsModule,
-        LauncherModule,
         ThrottlerModule.forRoot({
             ttl: 60,
             limit: 100,
         }),
-        ServeStaticModule.forRoot({
-            rootPath: join(__dirname, '..', '..', 'mk3-public', 'website'),
+        WinstonModule.forRoot({
+            transports: [
+                new winston.transports.File({
+                    level: 'info',
+                    filename: './logs/server.log',
+                    format: loggerFileFormat,
+                }),
+            ],
+            // @ts-ignore
+            rejectionHandlers: [
+                new winston.transports.File({ filename: './logs/error.log', format: errorFileFormat })
+            ],
+            exceptionHandlers: [
+                new winston.transports.File({ filename: './logs/error.log', format: errorFileFormat })
+            ],
         }),
+        UserModule,
+        RefreshTokensModule,
+        BimCatsModule,
+        LauncherModule,
         MailModule,
         PluginsModule,
     ],
@@ -45,4 +69,8 @@ import * as config from 'config';
         },
     ],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+    configure(consumer: MiddlewareConsumer): void {
+        consumer.apply(AppLoggerMiddleware).forRoutes('*');
+    }
+}

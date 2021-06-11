@@ -61,8 +61,9 @@ export class LauncherController {
     @Get('/download/latest')
     @UseGuards(RolesGuard)
     async downloadLatest(@Req() req, @Res() res) {
+        const reqIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress
         return this.launcherService
-            .downloadLatest(req.user, req.ip)
+            .downloadLatest(req.user, reqIP)
             .then((file) => {
                 return res.download(LauncherController.generateLink(file));
             });
