@@ -10,7 +10,7 @@ export class AppLoggerMiddleware implements NestMiddleware {
 
   use(request, response, next): void {
     const { baseUrl, method } = request;
-    const reqIP = request.headers["x-forwarded-from"] || request.connection.remoteAddress;
+    const reqIP = request.headers["x-forwarded-for"] || request.connection.remoteAddress;
     const userAgent = request.get("user-agent") || "undefined useragent";
     response.on("finish", () => {
       const { statusCode } = response;

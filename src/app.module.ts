@@ -14,8 +14,8 @@ import { PluginsModule } from './plugins/plugins.module';
 import * as config from 'config';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
-import { AppLoggerMiddleware } from "./middleware/logger.middleware";
-
+import 'winston-daily-rotate-file';
+import { AppLoggerMiddleware } from './middleware/logger.middleware';
 
 const errorFileFormat = winston.format.printf(({ level, message, label, timestamp }) => {
     return `${level}: ${timestamp} ${message}`;
@@ -39,7 +39,7 @@ const loggerFileFormat = winston.format.printf(({ level, message, label, timesta
         }),
         WinstonModule.forRoot({
             transports: [
-                new winston.transports.File({
+                new winston.transports.DailyRotateFile({
                     level: 'info',
                     filename: './logs/server.log',
                     format: loggerFileFormat,
