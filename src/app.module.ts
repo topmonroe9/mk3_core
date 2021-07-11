@@ -16,6 +16,7 @@ import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
 import { AppLoggerMiddleware } from './middleware/logger.middleware';
+import { TransmittalsModule } from './transmittals/transmittals.module';
 
 const errorFileFormat = winston.format.printf(({ level, message, label, timestamp }) => {
     return `${level}: ${timestamp} ${message}`;
@@ -59,6 +60,7 @@ const loggerFileFormat = winston.format.printf(({ level, message, label, timesta
         LauncherModule,
         MailModule,
         PluginsModule,
+        TransmittalsModule,
     ],
     controllers: [AppController],
     providers: [
