@@ -6,6 +6,7 @@ import { Launcher, LauncherDocument } from '@schemas/launcher.schema';
 import { UserDto } from '../users/dto/UserDto';
 import { User, UserDocument } from '@schemas/user.schema';
 import { Role } from '@interfaces/role.enum';
+import { Settings, SettingsDocument } from '@schemas/settings.schema';
 
 @Injectable()
 export class LauncherService {
@@ -13,6 +14,7 @@ export class LauncherService {
         @InjectModel(Launcher.name)
         private launcherModel: Model<LauncherDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
+        @InjectModel(Settings.name) private settingsModel: Model<SettingsDocument>
     ) {}
 
     public async getLatest(): Promise<LauncherDto> {
@@ -69,18 +71,17 @@ export class LauncherService {
     }
 
     public async downloadLatest(user: UserDto, ip: string): Promise<string> {
-        const account = await this.userModel.findOne({ _id: user.id });
+        // const account = await this.userModel.findOne({ _id: user.id });
+        //
+        // this.checkDownloadRestriction(account, user);
 
-        this.checkDownloadRestriction(account, user);
+        const setting = await this.settingsModel.findOne({ key: 1 });
+        if ( !setting || !setting.pluginDownloadLink )
+            throw new HttpException('No link found', HttpStatus.NOT_FOUND);
 
-        const launcher = await this.launcherModel
-            .findOne()
-            .sort({ version: -1 })
-            .limit(1);
-        // increase counter of downloads
-        await this.launcherDownloadCounter(user, ip);
+        // await this.launcherDownloadCounter(user, ip);
 
-        return launcher.downloadLink;
+        return setting.pluginDownloadLink;
     }
 
     private async launcherDownloadCounter(user: UserDto, ip: string) {

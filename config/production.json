@@ -11,7 +11,7 @@
     "ssl": false
   },
   "db": {
-    "mongoDBUri": ""
+    "mongoDBUri": "mongodb+srv://admin:6vUUauEk@cluster0.c0ogw.mongodb.net/mk3crm"
   },
   "mail": {
     "emailFrom": "noreply@mk3.ru",

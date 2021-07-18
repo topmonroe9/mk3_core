@@ -18,6 +18,7 @@ import { Roles } from '../_decorators/roles.decorator';
 import { JoiValidationPipe } from '../_pipes/joi-validation.pipe';
 import * as Validate from './dto/launcherValidation';
 import { join } from 'path';
+import fetch from 'node-fetch';
 
 @Controller('api/launchers')
 export class LauncherController {
@@ -59,13 +60,23 @@ export class LauncherController {
     }
 
     @Get('/download/latest')
-    @UseGuards(RolesGuard)
+    // @UseGuards(RolesGuard)
     async downloadLatest(@Req() req, @Res() res) {
         const reqIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress
         return this.launcherService
             .downloadLatest(req.user, reqIP)
-            .then((file) => {
-                return res.download(LauncherController.generateLink(file));
+            .then( async (link) => {
+
+                const file = await fetch(link).then( response => { return response.body})
+                res.attachment('MK3 Installer.msi')
+                res.setHeader('Content-type', 'application/msi');
+                res.setHeader('Access-Control-Allow-Origin', '*');
+
+                // Header to force download
+                res.setHeader('Content-disposition', 'attachment; filename=Report.msi');
+
+
+                return file.pipe(res)
             });
     }
 

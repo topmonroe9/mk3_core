@@ -3,15 +3,15 @@
     "server": {
         "internalIP": "localhost",
         "publicIP": "localhost",
-        "port": "3000",
+        "port": "8080",
         "origin": "http://localhost:4200"
     },
     "security": {
-        "jwtPrivateKey": "",
+        "jwtPrivateKey": "force-paint-taX1",
         "ssl": false
     },
     "db": {
-        "mongoDBUri": "mongodb://localhost/mk3crm"
+        "mongoDBUri": "mongodb+srv://admin:6vUUauEk@cluster0.c0ogw.mongodb.net/mk3crm"
     },
     "mail": {
         "emailFrom": "noreply@mk3.ru",
@@ -21,7 +21,7 @@
             "secure": true,
             "auth": {
                 "user": "noreply@mk3.ru",
-                "pass": ""
+                "pass": "Vp3yx+DaU5YS"
             }
         }
 
